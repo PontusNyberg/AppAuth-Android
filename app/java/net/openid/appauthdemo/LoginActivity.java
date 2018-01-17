@@ -15,7 +15,6 @@
 package net.openid.appauthdemo;
 
 import android.annotation.TargetApi;
-import android.app.PendingIntent;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,11 +34,7 @@ import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import net.openid.appauth.AppAuthConfiguration;
@@ -54,8 +49,6 @@ import net.openid.appauth.RegistrationResponse;
 import net.openid.appauth.ResponseTypeValues;
 import net.openid.appauth.browser.AnyBrowserMatcher;
 import net.openid.appauth.browser.BrowserMatcher;
-import net.openid.appauth.browser.ExactBrowserMatcher;
-import net.openid.appauthdemo.BrowserSelectionAdapter.BrowserInfo;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
@@ -95,8 +88,6 @@ public final class LoginActivity extends AppCompatActivity {
     private CountDownLatch mAuthIntentLatch = new CountDownLatch(1);
     private ExecutorService mExecutor;
 
-    private boolean mUsePendingIntents;
-
     @NonNull
     private BrowserMatcher mBrowserMatcher = AnyBrowserMatcher.INSTANCE;
 
@@ -130,7 +121,6 @@ public final class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        configureBrowserSelector();
         if (mConfiguration.hasConfigurationChanged()) {
             // discard any existing authorization state due to the change of configuration
             Log.i(TAG, "Configuration change detected, discarding old state");
@@ -184,8 +174,6 @@ public final class LoginActivity extends AppCompatActivity {
     @MainThread
     void startAuth() {
         displayLoading("Making authorization request");
-
-        mUsePendingIntents = ((CheckBox) findViewById(R.id.pending_intents_checkbox)).isChecked();
 
         // WrongThread inference is incorrect for lambdas
         // noinspection WrongThread
@@ -304,39 +292,6 @@ public final class LoginActivity extends AppCompatActivity {
     }
 
     /**
-     * Enumerates the browsers installed on the device and populates a spinner, allowing the
-     * demo user to easily test the authorization flow against different browser and custom
-     * tab configurations.
-     */
-    @MainThread
-    private void configureBrowserSelector() {
-        Spinner spinner = (Spinner) findViewById(R.id.browser_selector);
-        final BrowserSelectionAdapter adapter = new BrowserSelectionAdapter(this);
-        spinner.setAdapter(adapter);
-        spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                BrowserInfo info = adapter.getItem(position);
-                if (info == null) {
-                    mBrowserMatcher = AnyBrowserMatcher.INSTANCE;
-                    return;
-                } else {
-                    mBrowserMatcher = new ExactBrowserMatcher(info.mDescriptor);
-                }
-
-                recreateAuthorizationService();
-                createAuthRequest(getLoginHint());
-                warmUpBrowser();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-                mBrowserMatcher = AnyBrowserMatcher.INSTANCE;
-            }
-        });
-    }
-
-    /**
      * Performs the authorization request, using the browser selected in the spinner,
      * and a user-provided `login_hint` if available.
      */
@@ -348,23 +303,10 @@ public final class LoginActivity extends AppCompatActivity {
             Log.w(TAG, "Interrupted while waiting for auth intent");
         }
 
-        if (mUsePendingIntents) {
-            Intent completionIntent = new Intent(this, TokenActivity.class);
-            Intent cancelIntent = new Intent(this, LoginActivity.class);
-            cancelIntent.putExtra(EXTRA_FAILED, true);
-            cancelIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-            mAuthService.performAuthorizationRequest(
-                    mAuthRequest.get(),
-                    PendingIntent.getActivity(this, 0, completionIntent, 0),
-                    PendingIntent.getActivity(this, 0, cancelIntent, 0),
-                    mAuthIntent.get());
-        } else {
-            Intent intent = mAuthService.getAuthorizationRequestIntent(
-                    mAuthRequest.get(),
-                    mAuthIntent.get());
-            startActivityForResult(intent, RC_AUTH);
-        }
+        Intent intent = mAuthService.getAuthorizationRequestIntent(
+                mAuthRequest.get(),
+                mAuthIntent.get());
+        startActivityForResult(intent, RC_AUTH);
     }
 
     private void recreateAuthorizationService() {

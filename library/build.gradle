@@ -17,7 +17,7 @@ android.buildTypes.debug.manifestPlaceholders = [
 
 dependencies {
     api "com.android.support:customtabs:${rootProject.supportLibVersion}"
-    apply from: '../config/testdeps.gradle', to:it
+    apply from: '../config/testdeps.gradle', to: it
 }
 
 apply from: '../config/style.gradle'
@@ -84,5 +84,14 @@ install {
                 }
             }
         }
+    }
+}
+
+android {
+    compileSdkVersion 26
+    buildToolsVersion '26.0.2'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }

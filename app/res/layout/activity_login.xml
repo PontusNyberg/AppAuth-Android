@@ -108,25 +108,6 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/browser_selector_label"
-                    android:labelFor="@+id/browser_selector"/>
-
-                <Spinner
-                    android:id="@+id/browser_selector"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <CheckBox
-                    android:id="@+id/pending_intents_checkbox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/use_pending_intents"/>
-
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/auth_settings"
                     style="@style/Base.TextAppearance.AppCompat.Subhead"/>
